@@ -1,0 +1,170 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FireGuard Pro | Smart Fire Monitoring</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+<body>
+    <div class="app">
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-icon">🔥</div>
+                <div>
+                    <h1>FIREGUARD <span>PRO</span></h1>
+                    <p>SMART FIRE MONITORING SYSTEM</p>
+                </div>
+            </div>
+
+            <div class="connection">
+                <span id="connectionDot" class="dot offline"></span>
+                <span id="connectionText">Đang kết nối...</span>
+            </div>
+        </header>
+
+        <main>
+            <section class="welcome">
+                <div>
+                    <p class="eyebrow">IOT FIRE PROTECTION SYSTEM</p>
+                    <h2>Trung tâm giám sát báo cháy</h2>
+                    <p>Theo dõi cảm biến và điều khiển thiết bị theo thời gian thực.</p>
+                </div>
+                <div class="system-status" id="systemStatus">
+                    <span class="status-icon">●</span>
+                    <span id="alarmText">ĐANG CHỜ DỮ LIỆU</span>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="section-heading">
+                    <div>
+                        <h3>Giám sát cảm biến</h3>
+                        <p>Dữ liệu nhận trực tiếp từ ESP32</p>
+                    </div>
+                    <span class="live-label">● LIVE DATA</span>
+                </div>
+
+                <div class="sensor-grid">
+                    <article class="panel sensor-card">
+                        <div class="card-top">
+                            <span class="sensor-icon gas-icon">☁</span>
+                            <span class="tag">MQ-2</span>
+                        </div>
+                        <p class="card-label">Nồng độ khí / khói</p>
+                        <div class="metric">
+                            <strong id="gasValue">--</strong>
+                            <span>ADC</span>
+                        </div>
+                        <div class="progress">
+                            <div id="gasBar" class="progress-fill gas-fill"></div>
+                        </div>
+                        <p id="gasStatus" class="sensor-status">Chưa có dữ liệu</p>
+                    </article>
+
+                    <article class="panel sensor-card">
+                        <div class="card-top">
+                            <span class="sensor-icon temp-icon">♨</span>
+                            <span class="tag">DS18B20</span>
+                        </div>
+                        <p class="card-label">Nhiệt độ môi trường</p>
+                        <div class="metric">
+                            <strong id="tempValue">--</strong>
+                            <span>°C</span>
+                        </div>
+                        <div class="progress">
+                            <div id="tempBar" class="progress-fill temp-fill"></div>
+                        </div>
+                        <p id="tempStatus" class="sensor-status">Chưa có dữ liệu</p>
+                    </article>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="section-heading">
+                    <div>
+                        <h3>Điều khiển hệ thống</h3>
+                        <p>Chọn chế độ vận hành và thiết bị</p>
+                    </div>
+                </div>
+
+                <article class="panel mode-panel">
+                    <div>
+                        <h4>Chế độ hoạt động</h4>
+                        <p id="modeDescription">Đang chờ trạng thái từ ESP32</p>
+                    </div>
+                    <div class="mode-actions">
+                        <button id="autoBtn" class="mode-btn active" disabled>AUTO</button>
+                        <button id="manualBtn" class="mode-btn" disabled>MANUAL</button>
+                    </div>
+                    <span id="modeBadge" class="badge">--</span>
+                </article>
+
+                <div class="device-grid">
+                    <article class="panel device-card">
+                        <div class="device-heading">
+                            <span class="device-icon">🌀</span>
+                            <div>
+                                <h4>Quạt thông gió</h4>
+                                <p>Relay GPIO 26</p>
+                            </div>
+                        </div>
+                        <div class="device-state">
+                            <span id="fanState" class="state-pill">UNKNOWN</span>
+                            <span id="fanIndicator" class="device-indicator"></span>
+                        </div>
+                        <div class="device-actions">
+                            <button id="fanOnBtn" class="action-btn on" disabled>BẬT QUẠT</button>
+                            <button id="fanOffBtn" class="action-btn off" disabled>TẮT QUẠT</button>
+                        </div>
+                    </article>
+
+                    <article class="panel device-card">
+                        <div class="device-heading">
+                            <span class="device-icon">💧</span>
+                            <div>
+                                <h4>Máy bơm chữa cháy</h4>
+                                <p>Relay GPIO 27</p>
+                            </div>
+                        </div>
+                        <div class="device-state">
+                            <span id="pumpState" class="state-pill">UNKNOWN</span>
+                            <span id="pumpIndicator" class="device-indicator"></span>
+                        </div>
+                        <div class="device-actions">
+                            <button id="pumpOnBtn" class="action-btn on" disabled>BẬT BƠM</button>
+                            <button id="pumpOffBtn" class="action-btn off" disabled>TẮT BƠM</button>
+                        </div>
+                    </article>
+                </div>
+                <p id="controlNotice" class="notice">Kết nối MQTT để sử dụng điều khiển.</p>
+            </section>
+
+            <section class="section">
+                <div class="section-heading">
+                    <div>
+                        <h3>Trạng thái cảnh báo</h3>
+                        <p>Phân tích cảnh báo từ ESP32</p>
+                    </div>
+                </div>
+                <article class="panel alarm-panel" id="alarmPanel">
+                    <div class="alarm-symbol">✓</div>
+                    <div>
+                        <h4 id="alarmTitle">Hệ thống đang khởi tạo</h4>
+                        <p id="alarmDescription">Đang chờ dữ liệu cảm biến và trạng thái cảnh báo.</p>
+                    </div>
+                </article>
+            </section>
+
+            <footer>
+                <p>FIREGUARD PRO · ESP32 · FREERTOS · MQTT</p>
+                <p>LAB 3 – HỆ THỐNG GIÁM SÁT VÀ CẢNH BÁO CHÁY</p>
+            </footer>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
